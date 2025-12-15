@@ -7,5 +7,5 @@ def home():
     return "Order Service is Running!"
 
 if __name__ == '__main__':
-    # انتبهي لرقم البورت المخصص لكل خدمة كما في المستند
+
     app.run(port=5005, debug=True)
