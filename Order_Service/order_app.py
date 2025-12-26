@@ -87,6 +87,51 @@ def get_order(order_id):
         cursor.close()
         conn.close()
 
+@app.route("/api/orders", methods=["GET"])
+def get_orders_by_customer():
+    customer_id = request.args.get("customer_id")
+
+    if not customer_id:
+        return jsonify({"error": "customer_id query parameter is required"}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        # جلب كل الطلبات الخاصة بالعميل
+        cursor.execute(
+            "SELECT * FROM orders WHERE customer_id = %s",
+            (customer_id,)
+        )
+        orders = cursor.fetchall()
+
+        if not orders:
+            return jsonify({
+                "customer_id": customer_id,
+                "orders": []
+            }), 200
+
+        # لكل طلب، نجيب المنتجات التابعة له
+        for order in orders:
+            cursor.execute(
+                "SELECT product_id, quantity FROM order_items WHERE order_id = %s",
+                (order['order_id'],)
+            )
+            order['products'] = cursor.fetchall()
+
+        return jsonify({
+            "customer_id": customer_id,
+            "orders": orders
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        cursor.close()
+        conn.close()
+
+
 if __name__ == "__main__":
 
     app.run(port=5001, debug=True)
