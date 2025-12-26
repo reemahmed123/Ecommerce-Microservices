@@ -18,11 +18,12 @@ import jakarta.servlet.http.HttpServletResponse;
 @WebServlet("/profile")
 public class ProfileServlet extends HttpServlet {
 
+    @SuppressWarnings("unchecked")
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        String customerId = request.getParameter("customer_id");  // افترض يجي من session أو parameter
+        String customerId = request.getParameter("customer_id"); // افترض يجي من session أو parameter
 
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest req = HttpRequest.newBuilder()
