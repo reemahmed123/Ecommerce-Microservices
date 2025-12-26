@@ -51,5 +51,44 @@ def update_inventory():
     conn.close()
     return jsonify({"message": "Updated"}), 200
 
+
+@app.route("/api/inventory/check-stock", methods=["POST"])
+def check_stock():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    data = request.get_json()
+    products = data.get("products", [])
+
+    if not products:
+        return jsonify({"error": "Products list is required"}), 400
+
+    for item in products:
+        product_id = item.get("product_id")
+        required_qty = item.get("quantity")
+
+        cursor.execute(
+            "SELECT quantity_available FROM inventory WHERE product_id = %s",
+            (product_id,)
+        )
+        product = cursor.fetchone()
+
+        if not product:
+            return jsonify({
+                "status": "FAILED",
+                "message": f"Product {product_id} not found"
+            }), 404
+
+        if product["quantity_available"] < required_qty:
+            return jsonify({
+                "status": "FAILED",
+                "message": f"Product {product_id} is out of stock",
+                "available_quantity": product["quantity_available"]
+            }), 400
+
+    return jsonify({
+        "status": "OK",
+        "message": "All products are available"
+    }), 200
+
 if __name__ == "__main__":
     app.run(port=5002, debug=True)
